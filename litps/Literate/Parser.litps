@@ -1,0 +1,88 @@
+> module Literate.Parser where
+> 
+> import Prelude
+> 
+> import Data.List (List(), mapMaybe)
+> import Data.Array (length)
+> import Data.Maybe (Maybe(..))
+> import Data.Foldable (foldMap)
+> import Data.String (split)
+> 
+> import Control.Alt ((<|>))
+> import Control.Apply ((<*), (*>))
+> 
+> import Text.Parsing.Simple
+> import Text.Parsing.Combinators hiding (many, many1)
+> 
+> data Line = Comment String
+>           | Code String
+> 
+> instance showLine :: Show Line where
+>   show (Comment s) = "Comment " <> show s
+>   show (Code s) = "Code " <> show s
+
+Mostly for debugging in PSCI.
+
+> fromCode :: Line -> Maybe String
+> fromCode (Code s) = Just s
+> fromCode _ = Nothing
+> 
+> code :: Parser Line
+> code = ticked <|> indented
+> 
+> ticked :: Parser Line
+> ticked = bracket ticks goodStuff ticks
+> 
+> ticks :: Parser Unit
+> ticks = string "```" *> skipSpaces
+> 
+> goodStuff :: Parser Line
+> goodStuff = Code <<< fromCharList <$> many1 item <* notFollowedBy (string "```")
+> 
+> indented :: Parser Line
+> indented = Code <$> (exactly 4 space *> line)
+> 
+> birdTracks :: Parser Line
+> birdTracks = Code <$> (string "> " *> line)
+
+birdTracks are the only supported way of denoting code blocks right now.
+
+> line :: Parser String
+> line = fromCharList <$> many (sat (/= '\n')) <* skip newline <> eof
+
+A line is just a string of characters followed by a newline, or the end of the file.
+
+> comment :: Parser Line
+> comment = Comment <$> (atMost 3 space *> line)
+
+Comments can't start with too much indentation.
+
+> document :: Int -> Parser (List Line)
+> document n = atMost n (birdTracks <> comment)
+
+A document is a function that takes its maximum length (in lines of code) and
+produces a parser for a list of lines.
+
+> renderCode :: Line -> String
+> renderCode (Code s) = s
+> renderCode _ = ""
+> 
+> renderProgram :: List Line -> String
+> renderProgram = foldMap (<> "\n") <<< mapMaybe fromCode
+
+First we discard the comments, then we join all the code lines with a newline.
+
+> numberOfNewlines :: String -> Int
+> numberOfNewlines = length <<< split "\n"
+
+An easy way of getting the length of a document.
+
+> transpile :: String -> String
+> transpile p = case renderProgram <$> parse (document $ numberOfNewlines p) p of
+>                       Just x -> x
+>                       Nothing -> "ERROR: Either your program has a syntax error in it, or I have a semantic error in me :("
+
+First we parse a document, then we render it, producing a new `String`.
+
+Note: Since the `document` parser is defined in terms of `atMost` (which never fails),
+the `Nothing` case is impossible.

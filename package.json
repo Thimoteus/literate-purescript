@@ -1,0 +1,25 @@
+{
+  "name": "literate-purescript",
+  "version": "0.0.1",
+  "description": "literate-style programming for purescript",
+  "main": "transliterate",
+  "directories": {
+    "test": "test",
+    "litps": "litps"
+  },
+  "scripts": {
+    "test": "node transliterate litps/",
+    "build": "pulp build --optimise --to transliterate",
+    "copybin": "npm run build && chmod +x transliterate && sed -i -e '1i#!/usr/bin/env node\\' transliterate && mv transliterate ~/bin/ && echo 'Success!'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://www.github.com/Thimoteus/literate-purescript.git"
+  },
+  "keywords": [
+    "literate",
+    "purescript"
+  ],
+  "author": "Thimoteus",
+  "license": "MIT"
+}

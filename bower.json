@@ -1,0 +1,19 @@
+{
+  "name": "literate-purescript",
+  "version": "1.0.0",
+  "moduleType": [
+    "node"
+  ],
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "output"
+  ],
+  "dependencies": {
+    "purescript-console": "^0.1.0",
+    "purescript-simple-parser": "^2.1.0",
+    "purescript-node-fs": "^0.10.0",
+    "purescript-node-process": "^0.4.1"
+  }
+}
