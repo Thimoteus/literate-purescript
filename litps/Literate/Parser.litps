@@ -1,103 +1,121 @@
-> module Literate.Parser where
-> 
-> import Prelude
-> 
-> import Data.List (List(), mapMaybe)
-> import Data.Array (length)
-> import Data.Maybe (Maybe(..))
-> import Data.Foldable (foldMap, intercalate)
-> import Data.String (split, take)
-> 
-> import Control.Alt ((<|>))
-> import Control.Apply ((<*), (*>))
-> 
-> import Text.Parsing.Simple
-> import Text.Parsing.Combinators hiding (many, many1)
-> 
-> data Line = Comment String
->           | Code String
->           | Empty
-> 
-> instance showLine :: Show Line where
->   show (Comment s) = "Comment " <> show s
->   show (Code s) = "Code " <> show s
->   show Empty = ""
+```purescript
+module Literate.Parser where
+
+import Prelude
+
+import Data.List (List(), mapMaybe)
+import Data.Array (length)
+import Data.Maybe (Maybe(..))
+import Data.Foldable (foldMap, intercalate)
+import Data.String (split, take)
+
+import Control.Alt ((<|>))
+import Control.Apply ((<*), (*>))
+
+import Text.Parsing.Simple
+import Text.Parsing.Combinators hiding (many, many1)
+
+data Line = Comment String
+          | Code String
+          | Empty
+
+instance showLine :: Show Line where
+  show (Comment s) = "Comment " <> show s
+  show (Code s) = "Code " <> show s
+  show Empty = ""
+```
 
 Mostly for debugging in PSCI.
 
-> line :: Parser String
-> line = fromCharList <$> many1 (sat (/= '\n')) <* skip newline
+```purescript
+line :: Parser String
+line = fromCharList <$> many1 (sat (/= '\n')) <* skip newline
+```
 
 A line is just a string of characters followed by a newline, or the end of the file.
 
-> emptyLine :: Parser Line
-> emptyLine = string "\n" *> pure Empty
+```purescript
+emptyLine :: Parser Line
+emptyLine = string "\n" *> pure Empty
+```
 
 An empty line is a line that models the empty string.
 
-line :: Parser String
-line = line' |= \l -> l /= ""
+```purescript
+fromCode :: Line -> Maybe String
+fromCode (Code s) = Just s
+fromCode _ = Nothing
 
-A line is a nonempty line of text.
+code :: Parser Line
+code = ticked <|> birdTracks <|> indented
+```
 
-> fromCode :: Line -> Maybe String
-> fromCode (Code s) = Just s
-> fromCode _ = Nothing
-> 
-> code :: Parser Line
-> code = ticked <|> indented <|> birdTracks
-> 
-> ticked :: Parser Line
-> ticked = bracket ticks goodStuff ticks
-> 
-> ticks :: Parser Unit
-> ticks = string "```" *> skipSpaces
-> 
-> goodStuff :: Parser Line
-> goodStuff = Code <<< (<> "\n") <<< intercalate "\n" <$> many noTickLine
-> 
-> indented :: Parser Line
-> indented = Code <$> (exactly 4 space *> line)
+code can be surrounded by triple ticks, prefaced with Bird tracks, or indented.
 
-> birdTracks :: Parser Line
-> birdTracks = Code <$> (string "> " *> line)
+```purescript
+ticked :: Parser Line
+ticked = bracket ticks goodStuff ticks
 
-Bird tracks are the only supported way of denoting code blocks right now.
+ticks :: Parser Unit
+ticks = string "```" *> skip (string "purescript") *> skipSpaces
 
-> noTickLine :: Parser String
-> noTickLine = line |= \ l -> take 3 l /= "```"
+goodStuff :: Parser Line
+goodStuff = Code <<< intercalate "\n" <$> many noTickLine
+
+noTickLine :: Parser String
+noTickLine = (line |= \ l -> take 3 l /= "```") <> (string "\n" *> pure "")
+```
 
 a noTickLine does not start with three ticks.
 
-> comment :: Parser Line
-> comment = Comment <$> (skipSpaces *> line)
+    indented :: Parser Line
+    indented = Code <$> (exactly 4 space *> line)
+
+indented lines have at least 4 spaces, followed by a line. We use `exactly`
+here because `atLeast` is greedy in the `space` parser.
+
+> birdTracks :: Parser Line
+> birdTracks = Code <$> (string "> " *> line) --*
+
+```purescript
+comment :: Parser Line
+comment = Comment <$> (skipSpaces *> line)
+```
 
 Comments are anything that isn't code.
 
-> document :: Int -> Parser (List Line)
-> document n = atMost n (emptyLine <> birdTracks <> comment)
+```purescript
+document :: Parser (List Line)
+document = many (emptyLine <> code <> comment)
+```
 
 A document is a function that takes its maximum length (in lines of code) and
 produces a parser for a list of lines.
 
-> renderCode :: Line -> String
-> renderCode (Code s) = s
-> renderCode _ = ""
-> 
-> renderProgram :: List Line -> String
-> renderProgram = foldMap (<> "\n") <<< mapMaybe fromCode
+```purescript
+renderCode :: Line -> String
+renderCode (Code s) = s
+renderCode _ = ""
+
+renderProgram :: List Line -> String
+renderProgram = foldMap (<> "\n") <<< mapMaybe fromCode
+```
 
 First we discard the comments, then we join all the code lines with a newline.
 
-> numberOfNewlines :: String -> Int
-> numberOfNewlines = length <<< split "\n"
+```purescript
+numberOfNewlines :: String -> Int
+numberOfNewlines = length <<< split "\n"
+```
 
 An easy way of getting the length of a document.
 
-> transpile :: String -> String
-> transpile p = case renderProgram <$> parse (document $ numberOfNewlines p) p of
->                       Just x -> x
->                       Nothing -> "ERROR: Either your program has a syntax error in it, or I have a semantic error in me :("
+```purescript
+transpile :: String -> String
+transpile p = case renderProgram <$> parse document p of
+                   Just x -> x
+                   Nothing -> "ERROR: The \"impossible\" happened."
+```
 
 First we parse a document, then we render it, producing a new `String`.
 

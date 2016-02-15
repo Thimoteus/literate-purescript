@@ -1,21 +1,23 @@
 module Main where
+
 import Prelude
 import Control.Monad (when)
 import Control.Monad.Eff
 import Control.Monad.Eff.Exception (EXCEPTION())
-import Control.Monad.Eff.Console
+
 import Data.Array (drop, head, filter, zip, concatMap)
-import Data.Maybe (Maybe(..), fromMaybe)
-import Data.Foldable (for_)
+import Data.Maybe (fromMaybe)
 import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..), fst, snd)
-import Data.String (dropWhile, length)
+import Data.String (dropWhile)
+
 import Node.Path (FilePath(), dirname)
 import Node.Encoding (Encoding(..))
 import Node.FS (FS())
 import Node.FS.Sync (readTextFile, writeTextFile, exists, stat, readdir, mkdir)
-import Node.FS.Stats (Stats(), isDirectory, isFile)
+import Node.FS.Stats (isDirectory, isFile)
 import Node.Process (argv)
+
 import Literate.Parser (transpile)
 type RecursivEff a = forall e. Eff ( fs :: FS, err :: EXCEPTION | e ) a
 getDirFiles :: FilePath -> RecursivEff (Tuple (Array String) (Array String))
