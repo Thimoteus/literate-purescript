@@ -69,8 +69,7 @@ to a file with ".purs" added to the end.
 > makeSurePathExists path = do
 >   let dir = dirname path
 >   doesExist <- exists dir
->   when (not doesExist) do
->     mkdir dir
+>   when (not doesExist) $ mkdir dir
 
 Gets the dirname of a given path. If it exists, nothing is done; if it doesn't,
 the directory is created.
