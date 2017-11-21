@@ -1,16 +1,16 @@
 {
   "name": "literate-purescript",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "description": "literate-style programming for purescript",
-  "main": "transliterate",
+  "main": "litps.js",
   "directories": {
     "test": "test",
     "litps": "litps"
   },
   "scripts": {
-    "test": "node transliterate litps/",
-    "build": "pulp build --optimise --to transliterate",
-    "copybin": "npm run build && chmod +x transliterate && sed -i -e '1i#!/usr/bin/env node\\' transliterate && mv transliterate ~/bin/ && echo 'Success!'"
+    "build": "pulp build --optimise --to litps.js",
+    "test": "rm -rf test/ && npm run build && node litps.js --litps litps/ --purs test/",
+    "copybin": "npm run build && chmod +x litps.js && sed -i -e '1i#!/usr/bin/env node\\' litps.js && mv litps.js ~/bin/ && echo 'Success!'"
   },
   "repository": {
     "type": "git",

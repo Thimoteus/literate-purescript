@@ -1,6 +1,6 @@
 {
   "name": "literate-purescript",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "moduleType": [
     "node"
   ],
@@ -11,9 +11,17 @@
     "output"
   ],
   "dependencies": {
-    "purescript-console": "^0.1.0",
-    "purescript-simple-parser": "^2.2.0",
-    "purescript-node-fs": "^0.10.0",
-    "purescript-node-process": "^0.4.1"
+    "purescript-console": "^3.0.0",
+    "purescript-node-fs": "^4.0.0",
+    "purescript-node-process": "^5.0.0",
+    "purescript-transformerless": "^2.1.0",
+    "purescript-optlicative": "https://github.com/Thimoteus/purescript-optlicative.git#v0.4.0",
+    "purescript-validation": "^3.2.0",
+    "purescript-typelevel-prelude": "^2.5.0",
+    "purescript-record": "^0.2.5",
+    "purescript-snail": "^4.0.0"
+  },
+  "devDependencies": {
+    "purescript-psci-support": "^3.0.0"
   }
 }
