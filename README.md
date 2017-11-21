@@ -10,21 +10,46 @@ you need to identify code.
 ## usage
 
 Create a directory for your literate files.
-Comments are lines of nonindented text, and code can take any of three forms:
-* Bird tracks (`> import Prelude`)
-* 4-space indentation blocks (`    import Prelude`)
-* Backticks
+Comments are normal lines of text, and code is marked by triple backticks.
 
-Run the transpiler on the directory. It will generate `.purs` source files with
-the comments removed into your `src/` directory.
+Options are as follows:
 
-You can build the transpiler with `npm run build`.
-
-## example
-
-This tool is self-hosting, so the "real" source is in the `litps/` directory.
-Earlier versions of the transpiler are run against it:
 ```
-> node transliterate litps/
+Usage: litps [options]
+     | litps compile [options]
+
+Root options:
+  --help -h       Shows this text.
+  --version -v    Shows version.
+  --file <path>   Specify only a single file as input.
+  --input <dir>   Specify the directory of literate files.
+                  Defaults to "litps/".
+  --output <dir>  Specify the directory of output PS files.
+                  Defaults to "src/".
+  --i-ext <ext>   Specify the extension of literate files.
+                  Defaults to "md".
+  --o-ext <ext>   Specify the extension of source files.
+                  Defaults to "purs".
+
+Compile options: Run 'litps compile --help'
 ```
-which creates purescript source files in `src/`, which are then built using Pulp.
+
+As of now the output directory must not exist (this is to prevent accidentally
+overwriting source code, as actually happened to me during development). This
+may change in a future version to allow interactively choosing whether to remove
+the output directory before building or not.
+
+## building
+
+`npm run build`
+
+This will create `litps` in the directory, which you can call: `node litps`.
+
+## installing
+
+`npm run copybin` will run `npm run build`, then mark it executable and move it
+to `~/bin/` which should be in your `$PATH`.
+
+## extra
+
+Windows and MacOS are unsupported.

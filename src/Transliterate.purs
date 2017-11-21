@@ -15,24 +15,34 @@ unlines = intercalate "\n"
 bracketsCode :: String -> Boolean
 bracketsCode s = String.take 3 s == "```"
 
-data State = Comment | Code
+data TextState = Comment | Code
 
-flipState :: State -> State
-flipState Comment = Code
-flipState Code = Comment
+type State = {textState :: TextState, insertNl :: Boolean}
+
+flipTextState :: State -> State
+flipTextState s = s {textState = f s.textState } where
+  f = case _ of
+    Comment -> Code
+    Code -> Comment
+
+flipNl :: State -> State
+flipNl o = o {insertNl = not o.insertNl}
 
 step :: Array String -> String -> State.State State (Array String)
 step acc s | bracketsCode s = do
-  State.modify flipState
-  pure (acc <> ["\n"])
+  {insertNl} <- State.get
+  State.modify (flipTextState <<< flipNl)
+  if insertNl
+    then pure (acc <> ["\n"])
+    else pure acc
 step acc s = do
-  state <- State.get
-  pure case state of
+  {textState} <- State.get
+  pure case textState of
     Comment -> acc
     Code -> acc <> [s]
 
 initState :: State
-initState = Comment
+initState = {textState: Comment, insertNl: false}
 
 parse :: Array String -> State.State State (Array String)
 parse = Array.foldRecM step []
