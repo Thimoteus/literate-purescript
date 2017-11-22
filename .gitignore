@@ -5,5 +5,5 @@
 /.psci*
 /src/.webpack.js
 /.psc*
-litps.js
+litps
 /.psa*

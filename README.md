@@ -23,7 +23,7 @@ Root options:
   --version -v    Shows version.
   --file <path>   Specify only a single file as input.
   --input <dir>   Specify the directory of literate files.
-                  Defaults to "litps/".
+                  Defaults to "literate/".
   --output <dir>  Specify the directory of output PS files.
                   Defaults to "src/".
   --i-ext <ext>   Specify the extension of literate files.

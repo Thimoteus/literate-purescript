@@ -32,7 +32,7 @@ globalOpts =
   }
   <$> flag "help" (Just 'h')
   <*> flag "version" (Just 'v')
-  <*> withDefault "litps/" (string "input" Nothing)
+  <*> withDefault "literate/" (string "input" Nothing)
   <*> withDefault "src/" (string "output" Nothing)
   <*> withDefault "md" (string "i-ext" Nothing)
   <*> withDefault "purs" (string "o-ext" Nothing)

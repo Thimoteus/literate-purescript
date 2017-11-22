@@ -57,7 +57,7 @@ rewriteExt ext f
 prepareSourceFileInfo :: String -> FilePath -> FileInfo -> FileInfo
 prepareSourceFileInfo ext root o = o
   { path = rewriteRoot root (rewriteExt ext o.path)
-  , content = transliterate o.content}
+  , content = transliterate o.content }
 
 getFolderContents :: FilePath -> App FolderContents
 getFolderContents f = do
@@ -99,6 +99,7 @@ runRoot o = do
   when o.help (exitWith 0 helpText)
   when o.version (exitWith 0 versionText)
   maybe (pure unit) (runSingle o.outputExt) o.file
+  log $ "Transliterating files from " <> o.input <> " to " <> o.output <> " ..."
   contents <- recursivelyGetContents o.input
   let
     toTranslit = Array.filter translittable contents.others
@@ -107,17 +108,19 @@ runRoot o = do
       isJust $ String.stripSuffix (String.Pattern ("." <> o.inputExt)) path
     newFiles =
       map (prepareSourceFileInfo o.outputExt o.output) toTranslit
+  log $ "Transliterating " <> show (Array.length toTranslit) <> " file(s)."
   exists (folder o.output) ~?> \ _ ->
     exitWith 1 ("Folder " <> o.output <> " exists, aborting")
   traverse_ (mkdir <<< folder) $ [o.output] <> toMkdir
   parTraverse_ (\ x -> x.content +> file x.path) newFiles
-  log "Done"
+  log "Done."
 
 runSingle :: String -> FilePath -> App Unit
 runSingle ext f = do
+  log $ "Transliterating " <> f <> " ..."
   contents <- transliterate <$> cat (file f)
   contents +> file (rewriteExt ext f)
-  exitWith 0 "Done"
+  exitWith 0 "Done."
 
 runCompile :: Options -> App Unit
 runCompile o = do
