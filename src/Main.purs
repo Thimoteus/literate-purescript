@@ -99,7 +99,6 @@ runRoot o = do
   when o.help (exitWith 0 helpText)
   when o.version (exitWith 0 versionText)
   maybe (pure unit) (runSingle o.outputExt) o.file
-  log $ "Transliterating files from " <> o.input <> " to " <> o.output <> " ..."
   contents <- recursivelyGetContents o.input
   let
     toTranslit = Array.filter translittable contents.others
@@ -108,7 +107,9 @@ runRoot o = do
       isJust $ String.stripSuffix (String.Pattern ("." <> o.inputExt)) path
     newFiles =
       map (prepareSourceFileInfo o.outputExt o.output) toTranslit
-  log $ "Transliterating " <> show (Array.length toTranslit) <> " file(s)."
+  log $
+    "Transliterating " <> show (Array.length toTranslit) <> " file(s) from " <>
+    o.input <> " to " <> o.output <> " ..."
   exists (folder o.output) ~?> \ _ ->
     exitWith 1 ("Folder " <> o.output <> " exists, aborting")
   traverse_ (mkdir <<< folder) $ [o.output] <> toMkdir

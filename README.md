@@ -39,6 +39,10 @@ overwriting source code, as actually happened to me during development). This
 may change in a future version to allow interactively choosing whether to remove
 the output directory before building or not.
 
+Using the `--file` option will ignore `--input` (since the argument is the input
+file), `--output` (the output will be in the same directory as the input file)
+and `--i-ext` (since the extension is given in the input file).
+
 ## building
 
 `npm run build`

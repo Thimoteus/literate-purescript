@@ -6,6 +6,9 @@ import Data.Array as Array
 import Data.Foldable (intercalate)
 import Data.String as String
 
+type Markdown = String
+type Purs = String
+
 lines :: String -> Array String
 lines = String.split (String.Pattern "\n")
 
@@ -28,7 +31,7 @@ flipTextState s = s {textState = f s.textState } where
 flipNl :: State -> State
 flipNl o = o {insertNl = not o.insertNl}
 
-step :: Array String -> String -> State.State State (Array String)
+step :: Array Purs -> Markdown -> State.State State (Array Purs)
 step acc s | bracketsCode s = do
   {insertNl} <- State.get
   State.modify (flipTextState <<< flipNl)
@@ -44,10 +47,10 @@ step acc s = do
 initState :: State
 initState = {textState: Comment, insertNl: false}
 
-parse :: Array String -> State.State State (Array String)
+parse :: Array Markdown -> State.State State (Array Purs)
 parse = Array.foldRecM step []
 
-transliterate :: String -> String
+transliterate :: Markdown -> Purs
 transliterate s =
   let
     ls = lines s
