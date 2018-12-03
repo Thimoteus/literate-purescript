@@ -3,7 +3,6 @@ module Main where
 import Prelude
 
 import Constants (helpCompile, helpText, versionText)
-import Control.Coercible (coerce)
 import Control.MonadZero (guard)
 import Control.Parallel (parTraverse, parTraverse_)
 import Data.Array (fold)
@@ -41,14 +40,14 @@ writeContentToSource :: FileInfo -> App Unit
 writeContentToSource v = v.content +> file v.path
 
 rewriteRoot :: String -> FilePath -> FilePath
-rewriteRoot root f = root <> String.dropWhile (_ /= coerce '/') f
+rewriteRoot root f = root <> String.dropWhile (_ /= String.codePointFromChar '/') f
 
 rewriteExt :: String -> FilePath -> FilePath
 rewriteExt ext f
   | String.contains (String.Pattern ".") f =
     reverseString <<<
     (reverseString ext <> _) <<<
-    String.dropWhile (_ /= coerce '.') <<<
+    String.dropWhile (_ /= String.codePointFromChar '.') <<<
     reverseString $ f
       where
         reverseString =
@@ -93,7 +92,7 @@ getDirsToCreate root all toXlit = Array.sortBy depth do
   where
     depth = compare `on` numberOfSlashes
     numberOfSlashes = Array.length <<< Array.filter isSlash <<< String.toCodePointArray
-    isSlash = (_ == coerce '/')
+    isSlash = (_ == String.codePointFromChar '/')
 
 runRoot :: Options -> App Unit
 runRoot o = do
