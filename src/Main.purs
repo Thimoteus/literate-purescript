@@ -25,8 +25,6 @@ import Opts (Options, cmdOpts, prefs)
 import Snail (cat, crawl, exists, exitWith, file, folder, mkdir, run, (+>), (~?>))
 import Transliterate (transliterate)
 
-type App = Aff
-
 type FileInfo =
   { content :: String
   , path :: FilePath
@@ -38,7 +36,7 @@ type FolderContents =
   , others :: Array FileInfo
   }
 
-writeContentToSource :: FileInfo -> App Unit
+writeContentToSource :: FileInfo -> Aff Unit
 writeContentToSource v = v.content +> file v.path
 
 rewriteRoot :: String -> FilePath -> FilePath
@@ -61,7 +59,7 @@ prepareSourceFileInfo ext root o = o
   { path = rewriteRoot root (rewriteExt ext o.path)
   , content = transliterate o.content }
 
-getFolderContents :: FilePath -> App FolderContents
+getFolderContents :: FilePath -> Aff FolderContents
 getFolderContents f = do
   contents <- map (f <> _) <$> readdir f
   stats <- parTraverse stat contents
@@ -74,7 +72,7 @@ getFolderContents f = do
   let others = Array.zipWith {content: _, path: _} texts notfolders
   pure {folders, others}
 
-recursivelyGetContents :: FilePath -> App FolderContents
+recursivelyGetContents :: FilePath -> Aff FolderContents
 recursivelyGetContents f = do
   immediate <- getFolderContents f
   nested <- parTraverse recursivelyGetContents immediate.folders
@@ -96,7 +94,7 @@ getDirsToCreate root all toXlit = Array.sortBy depth do
     numberOfSlashes = Array.length <<< Array.filter isSlash <<< String.toCodePointArray
     isSlash = (_ == String.codePointFromChar '/')
 
-runRoot :: Options -> App Unit
+runRoot :: Options -> Aff Unit
 runRoot o = do
   when o.help (exitWith 0 helpText)
   when o.version (exitWith 0 versionText)
@@ -118,14 +116,14 @@ runRoot o = do
   parTraverse_ (\ x -> x.content +> file x.path) newFiles
   log "Done."
 
-runSingle :: String -> FilePath -> App Unit
+runSingle :: String -> FilePath -> Aff Unit
 runSingle ext f = do
   log $ "Transliterating " <> f <> " ..."
   contents <- transliterate <$> cat (file f)
   contents +> file (rewriteExt ext f)
   exitWith 0 "Done."
 
-runCompile :: Options -> App Unit
+runCompile :: Options -> Aff Unit
 runCompile o = do
   when o.help (exitWith 0 helpCompile)
   runRoot o
