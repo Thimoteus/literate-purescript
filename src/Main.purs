@@ -14,16 +14,18 @@ import Data.NonEmpty ((:|))
 import Data.String as String
 import Data.Tuple (fst, snd)
 import Data.Validation.Semigroup (unV)
+import Effect (Effect)
+import Effect.Aff (Aff)
 import Effect.Class.Console (log)
 import Node.FS.Aff (readdir, stat)
 import Node.FS.Stats (isDirectory)
 import Node.Optlicative (logErrors, optlicate)
 import Node.Path (FilePath)
 import Opts (Options, cmdOpts, prefs)
-import Snail (Script, Snail, cat, crawl, exists, exitWith, file, folder, mkdir, run, (+>), (~?>))
+import Snail (cat, crawl, exists, exitWith, file, folder, mkdir, run, (+>), (~?>))
 import Transliterate (transliterate)
 
-type App = Snail
+type App = Aff
 
 type FileInfo =
   { content :: String
@@ -129,7 +131,7 @@ runCompile o = do
   runRoot o
   run $ "pulp" :| ["build", "--src-path", o.output]
 
-main :: Script Unit
+main :: Effect Unit
 main = do
   {cmd, value} <- optlicate cmdOpts prefs
   case cmd of
