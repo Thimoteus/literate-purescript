@@ -3,7 +3,7 @@ module Main where
 import Prelude
 
 import Constants (helpCompile, helpText, versionText)
-import Control.Monad.Aff.Console (log)
+import Control.Coercible (coerce)
 import Control.MonadZero (guard)
 import Control.Parallel (parTraverse, parTraverse_)
 import Data.Array (fold)
@@ -15,6 +15,7 @@ import Data.NonEmpty ((:|))
 import Data.String as String
 import Data.Tuple (fst, snd)
 import Data.Validation.Semigroup (unV)
+import Effect.Class.Console (log)
 import Node.FS.Aff (readdir, stat)
 import Node.FS.Stats (isDirectory)
 import Node.Optlicative (logErrors, optlicate)
@@ -23,7 +24,7 @@ import Opts (Options, cmdOpts, prefs)
 import Snail (Script, Snail, cat, crawl, exists, exitWith, file, folder, mkdir, run, (+>), (~?>))
 import Transliterate (transliterate)
 
-type App = Snail ()
+type App = Snail
 
 type FileInfo =
   { content :: String
@@ -40,18 +41,18 @@ writeContentToSource :: FileInfo -> App Unit
 writeContentToSource v = v.content +> file v.path
 
 rewriteRoot :: String -> FilePath -> FilePath
-rewriteRoot root f = root <> String.dropWhile (_ /= '/') f
+rewriteRoot root f = root <> String.dropWhile (_ /= coerce '/') f
 
 rewriteExt :: String -> FilePath -> FilePath
 rewriteExt ext f
   | String.contains (String.Pattern ".") f =
     reverseString <<<
-    (reverseString ext <> _) <<< 
-    String.dropWhile (_ /= '.') <<<
+    (reverseString ext <> _) <<<
+    String.dropWhile (_ /= coerce '.') <<<
     reverseString $ f
       where
         reverseString =
-          String.fromCharArray <<< Array.reverse <<< String.toCharArray
+          String.fromCodePointArray <<< Array.reverse <<< String.toCodePointArray
   | otherwise = f <> "." <> ext
 
 prepareSourceFileInfo :: String -> FilePath -> FileInfo -> FileInfo
@@ -91,8 +92,8 @@ getDirsToCreate root all toXlit = Array.sortBy depth do
   pure (rewriteRoot root fldr)
   where
     depth = compare `on` numberOfSlashes
-    numberOfSlashes = Array.length <<< Array.filter isSlash <<< String.toCharArray
-    isSlash = (_ == '/')
+    numberOfSlashes = Array.length <<< Array.filter isSlash <<< String.toCodePointArray
+    isSlash = (_ == coerce '/')
 
 runRoot :: Options -> App Unit
 runRoot o = do
@@ -129,7 +130,7 @@ runCompile o = do
   runRoot o
   run $ "pulp" :| ["build", "--src-path", o.output]
 
-main :: Script () Unit
+main :: Script Unit
 main = do
   {cmd, value} <- optlicate cmdOpts prefs
   case cmd of

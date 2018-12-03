@@ -21,5 +21,8 @@
     "purescript"
   ],
   "author": "Thimoteus",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "pulp": "^12.3.0"
+  }
 }
