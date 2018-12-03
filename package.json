@@ -22,7 +22,5 @@
   ],
   "author": "Thimoteus",
   "license": "MIT",
-  "dependencies": {
-    "pulp": "^12.3.0"
-  }
+  "dependencies": {}
 }
