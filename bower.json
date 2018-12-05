@@ -11,17 +11,17 @@
     "output"
   ],
   "dependencies": {
-    "purescript-console": "^3.0.0",
-    "purescript-node-fs": "^4.0.0",
-    "purescript-node-process": "^5.0.0",
-    "purescript-transformerless": "^2.1.0",
-    "purescript-optlicative": "https://github.com/Thimoteus/purescript-optlicative.git#v0.4.0",
-    "purescript-validation": "^3.2.0",
-    "purescript-typelevel-prelude": "^2.5.0",
-    "purescript-record": "^0.2.5",
-    "purescript-snail": "^4.0.0"
+    "purescript-console": "^4.2.0",
+    "purescript-node-fs": "^5.0.0",
+    "purescript-node-process": "^6.0.0",
+    "purescript-transformerless": "^4.1.0",
+    "purescript-optlicative": "^5.1.0",
+    "purescript-validation": "^4.0.0",
+    "purescript-typelevel-prelude": "^3.0.0",
+    "purescript-record": "^1.0.0",
+    "purescript-snail": "^5.0.0"
   },
   "devDependencies": {
-    "purescript-psci-support": "^3.0.0"
+    "purescript-psci-support": "^4.0.0"
   }
 }

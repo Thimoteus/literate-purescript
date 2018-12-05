@@ -3,7 +3,6 @@ module Main where
 import Prelude
 
 import Constants (helpCompile, helpText, versionText)
-import Control.Monad.Aff.Console (log)
 import Control.MonadZero (guard)
 import Control.Parallel (parTraverse, parTraverse_)
 import Data.Array (fold)
@@ -15,15 +14,16 @@ import Data.NonEmpty ((:|))
 import Data.String as String
 import Data.Tuple (fst, snd)
 import Data.Validation.Semigroup (unV)
+import Effect (Effect)
+import Effect.Aff (Aff)
+import Effect.Class.Console (log)
 import Node.FS.Aff (readdir, stat)
 import Node.FS.Stats (isDirectory)
 import Node.Optlicative (logErrors, optlicate)
 import Node.Path (FilePath)
 import Opts (Options, cmdOpts, prefs)
-import Snail (Script, Snail, cat, crawl, exists, exitWith, file, folder, mkdir, run, (+>), (~?>))
+import Snail (cat, crawl, exists, exitWith, file, folder, mkdir, run, (+>), (~?>))
 import Transliterate (transliterate)
-
-type App = Snail ()
 
 type FileInfo =
   { content :: String
@@ -36,22 +36,22 @@ type FolderContents =
   , others :: Array FileInfo
   }
 
-writeContentToSource :: FileInfo -> App Unit
+writeContentToSource :: FileInfo -> Aff Unit
 writeContentToSource v = v.content +> file v.path
 
 rewriteRoot :: String -> FilePath -> FilePath
-rewriteRoot root f = root <> String.dropWhile (_ /= '/') f
+rewriteRoot root f = root <> String.dropWhile (_ /= String.codePointFromChar '/') f
 
 rewriteExt :: String -> FilePath -> FilePath
 rewriteExt ext f
   | String.contains (String.Pattern ".") f =
     reverseString <<<
-    (reverseString ext <> _) <<< 
-    String.dropWhile (_ /= '.') <<<
+    (reverseString ext <> _) <<<
+    String.dropWhile (_ /= String.codePointFromChar '.') <<<
     reverseString $ f
       where
         reverseString =
-          String.fromCharArray <<< Array.reverse <<< String.toCharArray
+          String.fromCodePointArray <<< Array.reverse <<< String.toCodePointArray
   | otherwise = f <> "." <> ext
 
 prepareSourceFileInfo :: String -> FilePath -> FileInfo -> FileInfo
@@ -59,7 +59,7 @@ prepareSourceFileInfo ext root o = o
   { path = rewriteRoot root (rewriteExt ext o.path)
   , content = transliterate o.content }
 
-getFolderContents :: FilePath -> App FolderContents
+getFolderContents :: FilePath -> Aff FolderContents
 getFolderContents f = do
   contents <- map (f <> _) <$> readdir f
   stats <- parTraverse stat contents
@@ -72,7 +72,7 @@ getFolderContents f = do
   let others = Array.zipWith {content: _, path: _} texts notfolders
   pure {folders, others}
 
-recursivelyGetContents :: FilePath -> App FolderContents
+recursivelyGetContents :: FilePath -> Aff FolderContents
 recursivelyGetContents f = do
   immediate <- getFolderContents f
   nested <- parTraverse recursivelyGetContents immediate.folders
@@ -91,10 +91,10 @@ getDirsToCreate root all toXlit = Array.sortBy depth do
   pure (rewriteRoot root fldr)
   where
     depth = compare `on` numberOfSlashes
-    numberOfSlashes = Array.length <<< Array.filter isSlash <<< String.toCharArray
-    isSlash = (_ == '/')
+    numberOfSlashes = Array.length <<< Array.filter isSlash <<< String.toCodePointArray
+    isSlash = (_ == String.codePointFromChar '/')
 
-runRoot :: Options -> App Unit
+runRoot :: Options -> Aff Unit
 runRoot o = do
   when o.help (exitWith 0 helpText)
   when o.version (exitWith 0 versionText)
@@ -116,20 +116,20 @@ runRoot o = do
   parTraverse_ (\ x -> x.content +> file x.path) newFiles
   log "Done."
 
-runSingle :: String -> FilePath -> App Unit
+runSingle :: String -> FilePath -> Aff Unit
 runSingle ext f = do
   log $ "Transliterating " <> f <> " ..."
   contents <- transliterate <$> cat (file f)
   contents +> file (rewriteExt ext f)
   exitWith 0 "Done."
 
-runCompile :: Options -> App Unit
+runCompile :: Options -> Aff Unit
 runCompile o = do
   when o.help (exitWith 0 helpCompile)
   runRoot o
   run $ "pulp" :| ["build", "--src-path", o.output]
 
-main :: Script () Unit
+main :: Effect Unit
 main = do
   {cmd, value} <- optlicate cmdOpts prefs
   case cmd of

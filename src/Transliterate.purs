@@ -1,6 +1,7 @@
 module Transliterate where
 
 import Prelude
+
 import Control.Monad.Transformerless.State as State
 import Data.Array as Array
 import Data.Foldable (intercalate)
